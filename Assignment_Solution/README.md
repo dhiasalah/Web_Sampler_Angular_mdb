@@ -70,9 +70,25 @@ A modern, interactive web-based sampler/drum machine built with **Web Audio API*
    The server should already be running on `http://localhost:3000` (it's provided to you)
 
 3. **Open in browser**
-   ```
-   http://localhost:3000/Assignment_Solution
-   ```
+
+   Choose one of the following methods:
+
+   - **Option A: Using Live Server (Recommended)**
+
+     - Right-click on `index.html` in VS Code
+     - Select "Open with Live Server"
+     - Browser opens automatically to `http://127.0.0.1:5500`
+
+   - **Option B: Using localhost:3000**
+
+     - Open your browser and navigate to:
+       ```
+       http://localhost:3000/Assignment_Solution
+       ```
+
+   - **Option C: Direct file opening**
+     - Double-click on `index.html` to open directly in your browser
+     - (Note: Some features may be limited due to browser security)
 
 ## 🎮 How to Use
 
