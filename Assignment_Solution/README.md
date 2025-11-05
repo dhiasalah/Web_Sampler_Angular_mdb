@@ -69,12 +69,6 @@ A modern, interactive web-based sampler/drum machine built with **Web Audio API*
 
    The server should already be running on `http://localhost:3000` (it's provided to you)
 
-   If the server is not running, start it from the parent directory:
-
-   ```bash
-   node server.js
-   ```
-
 3. **Open in browser**
    ```
    http://localhost:3000/Assignment_Solution
