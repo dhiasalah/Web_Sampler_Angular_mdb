@@ -169,5 +169,9 @@ export default class TrimbarsDrawer {
         this.rightTrimBar.x = clampedX;
       }
     }
+
+    // Redraw trim bars after moving
+    this.clear();
+    this.draw();
   }
 }

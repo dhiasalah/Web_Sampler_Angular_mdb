@@ -276,6 +276,10 @@ export default class SamplerGUI {
     this.trimbarsDrawer.leftTrimBar.x = leftPixel;
     this.trimbarsDrawer.rightTrimBar.x = rightPixel;
 
+    // Redraw trim bars on overlay canvas
+    this.trimbarsDrawer.clear();
+    this.trimbarsDrawer.draw();
+
     console.log(
       `Trim bars updated - Left: ${leftPixel}px, Right: ${rightPixel}px, Duration: ${duration}s`
     );
@@ -320,8 +324,15 @@ export default class SamplerGUI {
       this.waveformDrawer.init(pad.buffer, this.waveformCanvas, "#667eea");
       this.waveformDrawer.drawWave(0, this.waveformCanvas.height);
 
-      // Update trim bars
-      this.updateTrimBarsFromPad();
+      // Sync overlay canvas size with waveform canvas
+      this.overlayCanvas.width = this.waveformCanvas.width;
+      this.overlayCanvas.height = this.waveformCanvas.height;
+
+      // Update trim bars after waveform is drawn
+      // Use requestAnimationFrame to ensure rendering is complete
+      requestAnimationFrame(() => {
+        this.updateTrimBarsFromPad();
+      });
     } else {
       console.warn(`Pad ${padIndex} not loaded or invalid`);
     }

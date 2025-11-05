@@ -2,74 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Assignment - Professional Web Audio Sampler</title>
+    <title>🎹 Web Audio Sampler - Professional Beat Maker</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/main.js" type="module"></script>
 </head>
 
 <body>
     <div class="container">
-        <header>
-            <h1>🎹 Web Audio Sampler</h1>
-            <p>A professional sampler with preset loading, waveform visualization, and trim controls</p>
+        <!-- Header with Branding -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">♪</span>
+                    <h1>SAMPLER</h1>
+                </div>
+                <p class="tagline">Professional Web Audio Beat Maker</p>
+            </div>
         </header>
 
-        <section id="controlPanel">
-            <div class="preset-selector">
-                <label for="presetDropdown">Preset:</label>
-                <select id="presetDropdown" disabled>
-                    <option value="">Loading...</option>
+        <!-- Control Panel -->
+        <section id="controlPanel" class="control-panel">
+            <div class="preset-section">
+                <label for="presetDropdown" class="label-icon">🎵</label>
+                <select id="presetDropdown" disabled class="preset-select">
+                    <option value="">Loading presets...</option>
                 </select>
-                <button id="loadAllBtn" disabled>Load All Sounds</button>
+                <button id="loadAllBtn" disabled class="btn btn-primary">
+                    <span>⚡ Load Sounds</span>
+                </button>
             </div>
 
-            <div id="statusDisplay">
-                <span id="statusText">Initializing...</span>
-                <div id="progressContainer" style="display: none;">
-                    <div id="progressBar"></div>
-                    <span id="progressText">0%</span>
+            <div id="statusDisplay" class="status-panel">
+                <span id="statusText" class="status-text">Initializing...</span>
+                <div id="progressContainer" class="progress-container" style="display: none;">
+                    <div id="progressBar" class="progress-bar"></div>
+                    <span id="progressText" class="progress-text">0%</span>
                 </div>
             </div>
         </section>
 
-        <section id="padsContainer">
-            <h2>Sample Pads</h2>
-            <div id="padsGrid"></div>
+        <!-- Main Pads Section -->
+        <section id="padsContainer" class="pads-section">
+            <div class="pads-header">
+                <h2>🎹 Trigger Pads</h2>
+                <p class="pads-subtitle">Press A-P or click pads to play</p>
+            </div>
+            <div id="padsGrid" class="pads-grid"></div>
         </section>
 
-        <section id="waveformSection" style="display: none;">
-            <h2>Waveform Editor: <span id="currentPadName">-</span></h2>
-            <div class="waveform-wrapper">
-                <canvas id="waveformCanvas" width="900" height="200"></canvas>
-                <canvas id="overlayCanvas" width="900" height="200"></canvas>
+        <!-- Waveform Editor Section -->
+        <section id="waveformSection" class="waveform-section" style="display: none;">
+            <div class="waveform-header">
+                <h2>Waveform Editor</h2>
+                <span id="currentPadName" class="current-sample">-</span>
             </div>
+            
+            <div class="waveform-container">
+                <canvas id="waveformCanvas" width="900" height="200" class="waveform-canvas"></canvas>
+                <canvas id="overlayCanvas" width="900" height="200" class="overlay-canvas"></canvas>
+                <div class="trim-hint">Drag the green lines to trim the sample</div>
+            </div>
+
             <div class="waveform-controls">
-                <button id="playSelectedBtn">▶ Play Selected Region</button>
-                <button id="playFullBtn">▶ Play Full Sample</button>
-                <button id="resetTrimBtn">Reset Trim</button>
+                <button id="playSelectedBtn" class="btn btn-secondary">
+                    <span>▶ Play Selection</span>
+                </button>
+                <button id="playFullBtn" class="btn btn-secondary">
+                    <span>▶▶ Play Full</span>
+                </button>
+                <button id="resetTrimBtn" class="btn btn-tertiary">
+                    <span>↺ Reset</span>
+                </button>
             </div>
         </section>
 
-        <section id="infoSection">
-            <h3>Instructions</h3>
-            <ul>
-                <li>Select a preset from the dropdown menu</li>
-                <li>Click "Load All Sounds" to load the samples</li>
-                <li>Click on any pad to select and view its waveform</li>
-                <li>Use the trim bars to adjust the playback region</li>
-                <li>Click pads to trigger sounds (works with or without GUI)</li>
-                <li style="background-color: #fffacd; padding: 10px; border-radius: 6px; margin-top: 10px;">
-                    <strong>🎹 Keyboard Shortcuts (A-Z Alphabet):</strong>
-                    <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Pads 1-4: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">A B C D</code></li>
-                        <li>Pads 5-8: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">E F G H</code></li>
-                        <li>Pads 9-12: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">I J K L</code></li>
-                        <li>Pads 13-16: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">M N O P</code></li>
-                        <li>Extra: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">Q R S T U V W X Y Z</code> (also play pads)</li>
-                    </ul>
-                </li>
-            </ul>
+        <!-- Instructions Section -->
+        <section id="infoSection" class="info-section">
+            <h3>📚 How to Use</h3>
+            <div class="instructions-grid">
+                <div class="instruction-card">
+                    <span class="card-icon">1️⃣</span>
+                    <h4>Select Preset</h4>
+                    <p>Choose a drum kit from the dropdown menu</p>
+                </div>
+                <div class="instruction-card">
+                    <span class="card-icon">2️⃣</span>
+                    <h4>Load Sounds</h4>
+                    <p>Click "Load Sounds" to download samples</p>
+                </div>
+                <div class="instruction-card">
+                    <span class="card-icon">3️⃣</span>
+                    <h4>Play & Edit</h4>
+                    <p>Click pads or press keyboard to trigger</p>
+                </div>
+                <div class="instruction-card">
+                    <span class="card-icon">4️⃣</span>
+                    <h4>Trim Samples</h4>
+                    <p>Drag green bars to trim waveforms</p>
+                </div>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="keyboard-shortcuts">
+                <h4>⌨️ Keyboard Shortcuts (A-Z)</h4>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-row">
+                        <strong>Row 1:</strong>
+                        <code>A B C D</code> <em>(Pads 1-4)</em>
+                    </div>
+                    <div class="shortcut-row">
+                        <strong>Row 2:</strong>
+                        <code>E F G H</code> <em>(Pads 5-8)</em>
+                    </div>
+                    <div class="shortcut-row">
+                        <strong>Row 3:</strong>
+                        <code>I J K L</code> <em>(Pads 9-12)</em>
+                    </div>
+                    <div class="shortcut-row">
+                        <strong>Row 4:</strong>
+                        <code>M N O P</code> <em>(Pads 13-16)</em>
+                    </div>
+                    <div class="shortcut-row">
+                        <strong>Extra:</strong>
+                        <code>Q-Z</code> <em>(Additional triggers)</em>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🎵 Web Audio Sampler v1.0 | Built with Web Audio API</p>
+        </footer>
     </div>
 </body>
 
