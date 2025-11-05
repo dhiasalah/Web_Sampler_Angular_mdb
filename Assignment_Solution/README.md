@@ -54,8 +54,7 @@ A modern, interactive web-based sampler/drum machine built with **Web Audio API*
 ### Prerequisites
 
 - Modern web browser with Web Audio API support (Chrome, Firefox, Edge, Safari)
-- Node.js with a local server (for serving presets)
-- Internet connection (for initial preset loading)
+- The provided Node.js server running on `localhost:3000`
 
 ### Installation
 
@@ -66,13 +65,15 @@ A modern, interactive web-based sampler/drum machine built with **Web Audio API*
    cd Assignment_Solution
    ```
 
-2. **Start a local server** (with presets available)
+2. **Ensure the server is running**
+
+   The server should already be running on `http://localhost:3000` (it's provided to you)
+
+   If the server is not running, start it from the parent directory:
 
    ```bash
-   node ../server.js
+   node server.js
    ```
-
-   Or use any local server (e.g., Python's http.server, Live Server VS Code extension)
 
 3. **Open in browser**
    ```
