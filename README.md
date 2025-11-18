@@ -50,7 +50,6 @@ Application runs at: `http://localhost:3000`
 - 📦 Preset management system
 - 🎙️ Audio recording - Capture your performances and download them
 - ⌨️ Full keyboard support
-- 🌙 Professional dark theme UI
 - 📱 Responsive design
 
 ## Technologies

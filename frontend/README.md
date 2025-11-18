@@ -39,7 +39,6 @@ npm run dev
 - 🎙️ Audio recording with real-time duration display
 - 📦 Load presets from backend server (running on port 5000)
 - ⌨️ Keyboard support for hands-free playing
-- 📱 Responsive dark theme UI
 
 ## Backend Requirements
 
