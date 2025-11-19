@@ -187,14 +187,11 @@ export default function WaveformEditor({
     const pad = engine.getPad(selectedPadIndex);
     if (!pad || !pad.buffer) return;
 
-    setTimeout(() => {
-      if (!waveformCanvasRef.current || !overlayCanvasRef.current) {
-        return;
-      }
-
-      // Clear both canvases when switching sounds
+    // Immediately clear canvases and reset drawer
+    if (waveformCanvasRef.current && overlayCanvasRef.current) {
       const waveformCtx = waveformCanvasRef.current.getContext("2d");
       const overlayCtx = overlayCanvasRef.current.getContext("2d");
+      
       if (waveformCtx) {
         waveformCtx.clearRect(
           0,
@@ -212,10 +209,8 @@ export default function WaveformEditor({
         );
       }
 
-      if (!waveformDrawerRef.current) {
-        waveformDrawerRef.current = new WaveformDrawer();
-      }
-
+      // Always recreate WaveformDrawer to ensure fresh state
+      waveformDrawerRef.current = new WaveformDrawer();
       waveformDrawerRef.current.init(
         pad.buffer!,
         waveformCanvasRef.current,
@@ -246,7 +241,7 @@ export default function WaveformEditor({
       }
 
       onWaveformReady?.();
-    }, 50);
+    }
   }, [visible, engine, selectedPadIndex, onWaveformReady]);
 
   if (!visible) return null;

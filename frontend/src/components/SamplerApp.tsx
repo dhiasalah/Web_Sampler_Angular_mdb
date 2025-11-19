@@ -94,6 +94,7 @@ export default function SamplerApp() {
       {showWaveform && selectedPadIndex >= 0 && (
         <>
           <WaveformEditor
+            key={selectedPadIndex}
             engine={engine}
             selectedPadIndex={selectedPadIndex}
             visible={true}
