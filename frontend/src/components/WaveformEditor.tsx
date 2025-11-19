@@ -191,7 +191,7 @@ export default function WaveformEditor({
     if (waveformCanvasRef.current && overlayCanvasRef.current) {
       const waveformCtx = waveformCanvasRef.current.getContext("2d");
       const overlayCtx = overlayCanvasRef.current.getContext("2d");
-      
+
       if (waveformCtx) {
         waveformCtx.clearRect(
           0,
