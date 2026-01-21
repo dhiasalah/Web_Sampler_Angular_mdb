@@ -36,18 +36,11 @@ Create a `.env` file in the `backend` folder with the following variables:
 
 ```env
 # MongoDB Connection
-MONGODB_URI=your_mongodb_connection_string
+MONGODB_URI=mongodb+srv://dhia:dhia@cluster0.vdntp.mongodb.net/audio-sampler?retryWrites=true&w=majority&appName=Cluster0
 
 # Server Configuration
 PORT=5000
 ```
-
-**Required modifications:**
-
-- **`MONGODB_URI`**: Replace `your_mongodb_connection_string` with your actual MongoDB connection string
-  - For MongoDB Atlas: `mongodb+srv://username:password@cluster.mongodb.net/database_name`
-  - For local MongoDB: `mongodb://localhost:27017/database_name`
-- **`PORT`**: Port number for the server (default: 5000, modify if needed)
 
 **Note:** The `.env` file is not tracked by git for security reasons.
 
@@ -92,3 +85,9 @@ Run the test suite:
 ```bash
 npm test
 ```
+
+---
+
+## Documentation IA
+
+Pour voir comment l'IA a été utilisée dans ce projet, consultez le fichier [AI-DOCUMENTATION.md](../AI-DOCUMENTATION.md) à la racine du projet.

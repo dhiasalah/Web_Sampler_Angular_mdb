@@ -24,6 +24,12 @@ This Angular application is the frontend for the Web Audio Sampler project.
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for more details.
 
+---
+
+## Documentation IA
+
+Pour voir comment l'IA a été utilisée dans ce projet, consultez le fichier [AI-DOCUMENTATION.md](../AI-DOCUMENTATION.md) à la racine du projet.
+
 ```bash
 
 ```
