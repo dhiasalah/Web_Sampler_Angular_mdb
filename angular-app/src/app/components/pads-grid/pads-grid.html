@@ -17,7 +17,6 @@
         type="file" 
         #fileInput
         accept="audio/*"
-        multiple
         (change)="onFilesSelected($event)"
         style="display: none">
       <button 
@@ -325,6 +324,83 @@
             💾 Save Preset
           }
         </button>
+      </div>
+    </div>
+  }
+
+  <!-- Import Audio Dialog (Modal) -->
+  @if (showImportDialog()) {
+    <div class="modal-overlay" (click)="cancelImport()">
+      <div class="import-dialog" (click)="$event.stopPropagation()">
+        <div class="import-header">
+          <h3>📁 Import Audio File</h3>
+          <button class="close-btn" (click)="cancelImport()" [disabled]="isUploading()">✕</button>
+        </div>
+
+        <div class="import-content">
+          <!-- File Info -->
+          <div class="import-file-info">
+            <span class="file-icon">🎵</span>
+            <span class="file-name">{{ pendingImportFile()?.name }}</span>
+          </div>
+
+          <!-- Name Input -->
+          <div class="import-field">
+            <label for="importFileName">Sample Name</label>
+            <input 
+              type="text" 
+              id="importFileName"
+              placeholder="Enter a name for this sample"
+              [value]="importFileName()"
+              (input)="importFileName.set($any($event.target).value)"
+              [disabled]="isUploading()"
+              (keydown.enter)="confirmImport()">
+            <span class="field-hint">This name will be saved in the database</span>
+          </div>
+
+          <!-- Target Pad Info -->
+          <div class="import-target">
+            <span class="target-icon">🎹</span>
+            <span>Will be loaded into Pad {{ (targetPadIndex() ?? 0) + 1 }}</span>
+          </div>
+
+          <!-- Error Message -->
+          @if (uploadError()) {
+            <div class="import-error">
+              <span class="error-icon">⚠️</span>
+              <span>{{ uploadError() }}</span>
+            </div>
+          }
+
+          <!-- Success Message -->
+          @if (uploadSuccess()) {
+            <div class="import-success">
+              <span class="success-icon">✅</span>
+              <span>Uploaded successfully!</span>
+            </div>
+          }
+
+          <!-- Action Buttons -->
+          <div class="import-actions">
+            <button 
+              class="import-btn cancel" 
+              (click)="cancelImport()"
+              [disabled]="isUploading()">
+              Cancel
+            </button>
+            <button 
+              class="import-btn confirm"
+              [disabled]="isUploading() || !importFileName().trim()"
+              (click)="confirmImport()">
+              @if (isUploading()) {
+                <span class="uploading-spinner"></span>
+                Uploading...
+              } @else {
+                ☁️ Upload & Import
+              }
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   }

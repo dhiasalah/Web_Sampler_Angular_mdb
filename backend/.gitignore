@@ -3,3 +3,6 @@ coverage
 .vitest
 data/presets
 .env
+
+# Google Drive credentials (NEVER commit this!)
+credentials.json

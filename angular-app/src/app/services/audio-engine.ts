@@ -212,6 +212,7 @@ export class AudioEngine {
     padIndex: number,
     url: string,
     progressCallback: ProgressCallback | null = null,
+    customName?: string,
   ): Promise<Pad> {
     this.ensureInitialized();
 
@@ -224,7 +225,7 @@ export class AudioEngine {
     }
 
     const arrayBuffer = await this.fetchWithProgress(response, progressCallback);
-    const fileName = this.extractFileNameFromUrl(url);
+    const fileName = customName || this.extractFileNameFromUrl(url);
 
     return await this.loadSound(padIndex, arrayBuffer, fileName, progressCallback);
   }

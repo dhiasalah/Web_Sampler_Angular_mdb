@@ -103,6 +103,15 @@ export class PadsGrid {
   saveError = signal<string | null>(null);
   saveSuccess = signal(false);
 
+  // Import audio dialog state
+  showImportDialog = signal(false);
+  importFileName = signal('');
+  pendingImportFile = signal<File | null>(null);
+  targetPadIndex = signal<number | null>(null);
+  isUploading = signal(false);
+  uploadError = signal<string | null>(null);
+  uploadSuccess = signal(false);
+
   // Available categories for presets (from shared models)
   readonly categories = PRESET_CATEGORIES;
 
@@ -220,12 +229,17 @@ export class PadsGrid {
         this.updateLoadingState(i, { isLoading: true, progress: 0, error: null });
 
         try {
-          await this.audioEngine.loadSoundFromURL(i, url, (progress) => {
-            this.updateLoadingState(i, { isLoading: true, progress, error: null });
+          await this.audioEngine.loadSoundFromURL(
+            i,
+            url,
+            (progress) => {
+              this.updateLoadingState(i, { isLoading: true, progress, error: null });
 
-            const overall = ((loadedCount + progress / 100) / totalSamples) * 100;
-            this.overallProgress.set(Math.round(overall));
-          });
+              const overall = ((loadedCount + progress / 100) / totalSamples) * 100;
+              this.overallProgress.set(Math.round(overall));
+            },
+            sample.name,
+          );
 
           // Mark as loaded
           this.updateLoadingState(i, { isLoading: false, progress: 100, error: null });
@@ -255,8 +269,25 @@ export class PadsGrid {
    * Build full URL for sample
    */
   private buildSampleUrl(sampleUrl: string): string {
+    // If it's already a full URL (http/https), return as-is
+    if (sampleUrl.startsWith('http://') || sampleUrl.startsWith('https://')) {
+      return sampleUrl;
+    }
+
+    // If it starts with /api/, it's a MongoDB stream URL - prepend backend URL
+    if (sampleUrl.startsWith('/api/')) {
+      return `${environment.BACKEND_URL}${sampleUrl}`;
+    }
+
+    // If it starts with /presets/, it's a static file URL - prepend backend URL only
+    if (sampleUrl.startsWith('/presets/')) {
+      return `${environment.BACKEND_URL}${sampleUrl}`;
+    }
+
     // Remove leading ./ if present
     const cleanUrl = sampleUrl.replace(/^\.\//, '');
+
+    // For relative paths without /presets/, add the base URL
     return `${this.baseUrl}/${cleanUrl}`;
   }
 
@@ -314,16 +345,115 @@ export class PadsGrid {
     if (!input.files || input.files.length === 0) return;
 
     const file = input.files[0];
-    await this.importFileToSpecificPad(file, padIndex);
+
+    // Get clean name from filename (remove extension) as default
+    const defaultName = file.name.replace(/\.[^/.]+$/, '');
+
+    // Show import dialog for naming
+    this.pendingImportFile.set(file);
+    this.targetPadIndex.set(padIndex);
+    this.importFileName.set(defaultName);
+    this.uploadError.set(null);
+    this.uploadSuccess.set(false);
+    this.showImportDialog.set(true);
 
     // Reset input
     input.value = '';
   }
 
   /**
-   * Import a single audio file to a specific pad
+   * Cancel import dialog
    */
-  private async importFileToSpecificPad(file: File, padIndex: number): Promise<void> {
+  cancelImport(): void {
+    this.showImportDialog.set(false);
+    this.pendingImportFile.set(null);
+    this.targetPadIndex.set(null);
+    this.importFileName.set('');
+    this.uploadError.set(null);
+    this.uploadSuccess.set(false);
+  }
+
+  /**
+   * Confirm import and upload to Google Drive
+   */
+  async confirmImport(): Promise<void> {
+    const file = this.pendingImportFile();
+    const padIndex = this.targetPadIndex();
+    const customName = this.importFileName().trim();
+
+    if (!file || padIndex === null || !customName) {
+      this.uploadError.set('Please enter a name for the audio file');
+      return;
+    }
+
+    this.isUploading.set(true);
+    this.uploadError.set(null);
+
+    try {
+      // First, upload to MongoDB storage
+      console.log(`Uploading "${customName}" to server...`);
+
+      const uploadResponse = await this.presetService
+        .uploadAudioToDrive(file, customName)
+        .toPromise();
+
+      if (!uploadResponse?.success) {
+        throw new Error('Upload failed');
+      }
+
+      // Build full URL (response contains relative path like /api/audio/stream/id)
+      const fullUrl = uploadResponse.file.url.startsWith('http')
+        ? uploadResponse.file.url
+        : `${environment.BACKEND_URL}${uploadResponse.file.url}`;
+
+      console.log(`✅ Uploaded to server: ${fullUrl}`);
+
+      // Now load the audio into the pad locally
+      await this.loadAudioBufferToPad(file, padIndex, customName);
+
+      // Update or create the current preset with the new sample
+      const presetName = this.currentPresetName();
+      if (presetName) {
+        try {
+          // Get current preset and add the new sample
+          const preset = await this.presetService.getPreset(presetName).toPromise();
+          if (preset) {
+            const newSample = {
+              url: fullUrl,
+              name: customName,
+            };
+            const updatedSamples = [...preset.samples, newSample];
+            await this.presetService
+              .updatePreset(presetName, { samples: updatedSamples })
+              .toPromise();
+            console.log(`✅ Added sample "${customName}" to preset "${presetName}"`);
+          }
+        } catch (error) {
+          console.error('Error updating preset:', error);
+          // Continue anyway - file is uploaded and loaded locally
+        }
+      }
+
+      this.uploadSuccess.set(true);
+
+      // Close dialog after a short delay
+      setTimeout(() => {
+        this.cancelImport();
+      }, 1000);
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      this.uploadError.set(
+        error?.error?.error || error?.message || 'Failed to upload. Please try again.',
+      );
+    } finally {
+      this.isUploading.set(false);
+    }
+  }
+
+  /**
+   * Load audio buffer into a pad (without uploading)
+   */
+  private async loadAudioBufferToPad(file: File, padIndex: number, name: string): Promise<void> {
     // Ensure AudioEngine is initialized
     if (!this.audioEngine.isInitialized()) {
       await this.audioEngine.initialize();
@@ -336,67 +466,35 @@ export class PadsGrid {
       error: null,
     });
 
-    try {
-      // Read file as ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
+    // Read file as ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
 
-      // Update progress
-      this.updateLoadingState(padIndex, {
-        isLoading: true,
-        progress: 50,
-        error: null,
-      });
+    // Update progress
+    this.updateLoadingState(padIndex, {
+      isLoading: true,
+      progress: 50,
+      error: null,
+    });
 
-      // Decode audio
-      const ctx = this.audioEngine.getAudioContext();
-      if (!ctx) throw new Error('No audio context');
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    // Decode audio
+    const ctx = this.audioEngine.getAudioContext();
+    if (!ctx) throw new Error('No audio context');
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
 
-      // Get clean name from filename (remove extension)
-      const name = file.name.replace(/\.[^/.]+$/, '');
+    // Load into pad
+    this.audioEngine.loadBuffer(padIndex, audioBuffer, name);
 
-      // Load into pad
-      this.audioEngine.loadBuffer(padIndex, audioBuffer, name);
+    // Update loading state
+    this.updateLoadingState(padIndex, {
+      isLoading: false,
+      progress: 100,
+      error: null,
+    });
 
-      // Update loading state
-      this.updateLoadingState(padIndex, {
-        isLoading: false,
-        progress: 100,
-        error: null,
-      });
+    // Update pads signal
+    this.updatePadsFromEngine();
 
-      // Update pads signal
-      this.updatePadsFromEngine();
-
-      console.log(`Imported "${name}" into pad ${padIndex + 1}`);
-
-      // Upload to server if we have a current preset
-      const presetName = this.currentPresetName();
-      if (presetName) {
-        try {
-          console.log(`Uploading "${file.name}" to preset: ${presetName}`);
-          const uploadResponse = await this.presetService
-            .uploadAudioFiles(presetName, [file])
-            .toPromise();
-
-          if (uploadResponse) {
-            // Update the preset JSON with new sample
-            await this.updatePresetWithNewSamples(presetName, uploadResponse.files);
-            console.log('File uploaded and preset updated successfully');
-          }
-        } catch (error) {
-          console.error('Error uploading file to server:', error);
-          // Continue anyway - file is loaded locally
-        }
-      }
-    } catch (error) {
-      console.error(`Error importing ${file.name}:`, error);
-      this.updateLoadingState(padIndex, {
-        isLoading: false,
-        progress: 0,
-        error: `Failed to load ${file.name}`,
-      });
-    }
+    console.log(`Imported "${name}" into pad ${padIndex + 1}`);
   }
 
   /**
@@ -1064,8 +1162,29 @@ export class PadsGrid {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
-    const files = Array.from(input.files);
-    this.importAudioFiles(files);
+    const file = input.files[0]; // Get the first file
+
+    // Find the first available pad
+    const pads = this.pads();
+    let targetPadIndex = null;
+    for (let i = 0; i < 16; i++) {
+      if (!pads[i]?.loaded) {
+        targetPadIndex = i;
+        break;
+      }
+    }
+
+    if (targetPadIndex === null) {
+      console.warn('No available pads for import');
+      input.value = '';
+      return;
+    }
+
+    // Open the import dialog with the file
+    this.pendingImportFile.set(file);
+    this.targetPadIndex.set(targetPadIndex);
+    this.importFileName.set(file.name.replace(/\.[^/.]+$/, '')); // Remove extension
+    this.showImportDialog.set(true);
 
     // Reset the input so the same file can be selected again
     input.value = '';
@@ -1157,22 +1276,57 @@ export class PadsGrid {
       }
     }
 
-    // Upload files to server if we have a current preset
+    // Upload files to MongoDB storage and update preset
     if (presetName && filesToLoad.length > 0) {
       try {
-        console.log(`Uploading ${filesToLoad.length} file(s) to preset: ${presetName}`);
-        const uploadResponse = await this.presetService
-          .uploadAudioFiles(presetName, filesToLoad)
-          .toPromise();
+        console.log(`Uploading ${filesToLoad.length} file(s) to MongoDB storage...`);
 
-        if (uploadResponse) {
-          // Update the preset JSON with new samples
-          await this.updatePresetWithNewSamples(presetName, uploadResponse.files);
-          uploadedToServer = true;
-          console.log('Files uploaded and preset updated successfully');
+        // Get current preset
+        const currentPreset = await this.presetService.getPreset(presetName).toPromise();
+        if (!currentPreset) {
+          console.error('Preset not found');
+          return;
         }
+
+        // Start with existing samples or create array of 16 empty slots
+        const updatedSamples = [...currentPreset.samples];
+        while (updatedSamples.length < 16) {
+          updatedSamples.push(null as any); // Fill empty slots
+        }
+
+        // Upload each file and insert it at the correct pad position
+        for (let i = 0; i < filesToLoad.length; i++) {
+          const file = filesToLoad[i];
+          const padIndex = availablePadIndices[i];
+          const name = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+
+          console.log(`📤 Uploading "${name}" to MongoDB...`);
+
+          const uploadResponse = await this.presetService
+            .uploadAudioToDrive(file, name)
+            .toPromise();
+
+          if (uploadResponse?.success) {
+            // Build full URL
+            const fullUrl = uploadResponse.file.url.startsWith('http')
+              ? uploadResponse.file.url
+              : `${environment.BACKEND_URL}${uploadResponse.file.url}`;
+
+            // Insert at the pad position where it was loaded
+            updatedSamples[padIndex] = { url: fullUrl, name };
+            console.log(`✅ Uploaded "${name}" to MongoDB at pad ${padIndex + 1}: ${fullUrl}`);
+          }
+        }
+
+        // Remove null entries (keep only loaded samples)
+        const finalSamples = updatedSamples.filter((s) => s !== null);
+
+        // Update the preset with the new samples
+        await this.presetService.updatePreset(presetName, { samples: finalSamples }).toPromise();
+        uploadedToServer = true;
+        console.log(`✅ Updated preset "${presetName}" with ${filesToLoad.length} new sample(s)`);
       } catch (error) {
-        console.error('Error uploading files to server:', error);
+        console.error('Error uploading files to MongoDB:', error);
         // Continue anyway - files are loaded locally
       }
     }

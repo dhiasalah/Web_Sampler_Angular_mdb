@@ -1,11 +1,27 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
-import type { Preset, Sample, PresetsByCategory, UploadResponse, SampleToSave } from '../models';
+import type {
+  Preset,
+  Sample,
+  PresetsByCategory,
+  UploadResponse,
+  SampleToSave,
+  DriveUploadResponse,
+  DriveUploadMultipleResponse,
+} from '../models';
 import { environment } from '../config/environment';
 
 // Re-export types for backward compatibility
-export type { Preset, Sample, PresetsByCategory, UploadResponse, SampleToSave } from '../models';
+export type {
+  Preset,
+  Sample,
+  PresetsByCategory,
+  UploadResponse,
+  SampleToSave,
+  DriveUploadResponse,
+  DriveUploadMultipleResponse,
+} from '../models';
 
 /**
  * API configuration
@@ -115,6 +131,74 @@ export class PresetService {
    */
   deletePreset(name: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/presets/${encodeURIComponent(name)}`);
+  }
+
+  // ==================== GOOGLE DRIVE AUDIO UPLOAD ====================
+
+  /**
+   * Upload a single audio file to Google Drive
+   * @param file The audio file to upload
+   * @param customName Optional custom name for the file
+   * @returns Observable with the uploaded file info including Google Drive URL
+   */
+  uploadAudioToDrive(file: File, customName?: string): Observable<DriveUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    if (customName) {
+      formData.append('name', customName);
+    }
+    return this.http.post<DriveUploadResponse>(`${this.apiUrl}/audio/upload`, formData);
+  }
+
+  /**
+   * Upload multiple audio files to Google Drive
+   * @param files Array of files to upload
+   * @param customNames Optional array of custom names for the files
+   * @returns Observable with uploaded files info
+   */
+  uploadMultipleAudioToDrive(
+    files: File[],
+    customNames?: string[],
+  ): Observable<DriveUploadMultipleResponse> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file, file.name);
+    });
+    if (customNames && customNames.length > 0) {
+      formData.append('names', JSON.stringify(customNames));
+    }
+    return this.http.post<DriveUploadMultipleResponse>(
+      `${this.apiUrl}/audio/upload-multiple`,
+      formData,
+    );
+  }
+
+  /**
+   * Upload audio file to Drive and add to current preset's samples
+   * @param presetName Name of the preset to add the sample to
+   * @param file The audio file to upload
+   * @param sampleName The name for the sample
+   */
+  uploadAndAddSampleToPreset(
+    presetName: string,
+    file: File,
+    sampleName: string,
+  ): Observable<Preset> {
+    return this.uploadAudioToDrive(file, sampleName).pipe(
+      switchMap((uploadResponse) => {
+        // Add the new sample to the preset
+        return this.getPreset(presetName).pipe(
+          switchMap((preset) => {
+            const newSample: Sample = {
+              url: uploadResponse.file.url,
+              name: sampleName,
+            };
+            const updatedSamples = [...preset.samples, newSample];
+            return this.updatePreset(presetName, { samples: updatedSamples });
+          }),
+        );
+      }),
+    );
   }
 
   /**

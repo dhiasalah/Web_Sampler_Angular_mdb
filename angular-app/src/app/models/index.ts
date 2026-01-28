@@ -70,6 +70,36 @@ export interface UploadedFile {
 }
 
 /**
+ * Interface for audio upload response (single file)
+ */
+export interface DriveUploadResponse {
+  success: boolean;
+  file: {
+    id: string;
+    name: string;
+    url: string; // Relative URL like /api/audio/stream/id
+    originalName?: string;
+    size?: number;
+    mimeType?: string;
+  };
+}
+
+/**
+ * Interface for audio multiple files upload response
+ */
+export interface DriveUploadMultipleResponse {
+  success: boolean;
+  uploaded: number;
+  files: Array<{
+    id: string;
+    name: string;
+    originalName: string;
+    url: string;
+    size?: number;
+  }>;
+}
+
+/**
  * Interface for sample to save (with audio data)
  */
 export interface SampleToSave {

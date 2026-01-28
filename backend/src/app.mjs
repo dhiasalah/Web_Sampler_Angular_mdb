@@ -24,6 +24,9 @@ import { connectDB, isConnected } from "./db.mjs";
 // Import preset service (handles both MongoDB and file storage)
 import * as presetService from "./services/presetService.mjs";
 
+// Import audio storage service (stores audio in MongoDB)
+import * as audioStorageService from "./services/audioStorageService.mjs";
+
 export const app = express();
 app.use(express.json({ limit: "2mb" }));
 
@@ -101,6 +104,11 @@ await fs.mkdir(DATA_DIR, { recursive: true }).catch(() => {});
 const dbConnected = await connectDB();
 console.log(
   `📦 Storage mode: ${dbConnected ? "MongoDB Atlas" : "Local files"}`,
+);
+
+// Audio storage uses MongoDB (same as presets)
+console.log(
+  `🎵 Audio storage: ${dbConnected ? "MongoDB" : "Local files (limited)"}`,
 );
 
 // ------- Routes -------
@@ -288,8 +296,253 @@ app.get("/api/storage/status", (_req, res) => {
   res.json({
     mode: isConnected() ? "mongodb" : "files",
     mongoConnected: isConnected(),
+    audioStorageAvailable: audioStorageService.isStorageAvailable(),
     dataDir: DATA_DIR,
   });
+});
+
+// Configure memory storage for audio uploads (temporary buffer)
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 }, // 16MB limit (MongoDB document limit)
+  fileFilter: (req, file, cb) => {
+    // Accept audio files only
+    const allowedMimes = [
+      "audio/mpeg",
+      "audio/wav",
+      "audio/mp3",
+      "audio/ogg",
+      "audio/webm",
+      "audio/flac",
+      "audio/aac",
+      "audio/x-wav",
+      "audio/x-m4a",
+    ];
+    if (
+      allowedMimes.includes(file.mimetype) ||
+      file.mimetype.startsWith("audio/")
+    ) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          `Invalid file type: ${file.mimetype}. Only audio files are allowed.`,
+        ),
+        false,
+      );
+    }
+  },
+});
+
+// ==================== AUDIO FILE STORAGE (MongoDB) ====================
+
+// POST upload audio file to MongoDB
+// Expects multipart form with:
+// - file: the audio file
+// - name: (optional) custom name for the file
+// Returns the URL to stream the audio
+app.post(
+  "/api/audio/upload",
+  memoryUpload.single("file"),
+  async (req, res, next) => {
+    try {
+      // Check if MongoDB is connected
+      if (!audioStorageService.isStorageAvailable()) {
+        return res.status(503).json({
+          error: "Audio storage not available",
+          hint: "MongoDB connection required for audio storage",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No audio file provided" });
+      }
+
+      // Use custom name from request body or original filename (without extension)
+      const customName = req.body.name?.trim();
+      const originalExt = path.extname(req.file.originalname);
+      const baseName =
+        customName || req.file.originalname.replace(/\.[^/.]+$/, "");
+      const fileName = baseName.includes(".")
+        ? baseName
+        : baseName + originalExt;
+
+      console.log(
+        `📤 Uploading audio file: ${fileName} (${req.file.size} bytes)`,
+      );
+
+      // Upload to MongoDB
+      const result = await audioStorageService.uploadAudio(
+        req.file.buffer,
+        fileName,
+        req.file.originalname,
+        req.file.mimetype,
+      );
+
+      console.log(`✅ Uploaded to MongoDB: ${result.url}`);
+
+      res.status(201).json({
+        success: true,
+        file: {
+          id: result.id,
+          name: result.name,
+          url: result.url, // Use this URL for audio playback
+          originalName: result.originalName,
+          size: result.size,
+          mimeType: result.mimeType,
+        },
+      });
+    } catch (e) {
+      console.error("❌ Upload failed:", e.message);
+      next(e);
+    }
+  },
+);
+
+// POST upload multiple audio files to MongoDB
+app.post(
+  "/api/audio/upload-multiple",
+  memoryUpload.array("files", 16),
+  async (req, res, next) => {
+    try {
+      if (!audioStorageService.isStorageAvailable()) {
+        return res.status(503).json({
+          error: "Audio storage not available",
+          hint: "MongoDB connection required for audio storage",
+        });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "No audio files provided" });
+      }
+
+      // Parse custom names from request body (JSON array)
+      let customNames = [];
+      if (req.body.names) {
+        try {
+          customNames = JSON.parse(req.body.names);
+        } catch {
+          customNames = [];
+        }
+      }
+
+      console.log(`📤 Uploading ${req.files.length} audio files to MongoDB`);
+
+      const results = await Promise.all(
+        req.files.map(async (file, index) => {
+          const customName = customNames[index]?.trim();
+          const originalExt = path.extname(file.originalname);
+          const baseName =
+            customName || file.originalname.replace(/\.[^/.]+$/, "");
+          const fileName = baseName.includes(".")
+            ? baseName
+            : baseName + originalExt;
+
+          const result = await audioStorageService.uploadAudio(
+            file.buffer,
+            fileName,
+            file.originalname,
+            file.mimetype,
+          );
+
+          return {
+            id: result.id,
+            name: result.name,
+            originalName: result.originalName,
+            url: result.url,
+            size: result.size,
+          };
+        }),
+      );
+
+      console.log(`✅ Uploaded ${results.length} files to MongoDB`);
+
+      res.status(201).json({
+        success: true,
+        uploaded: results.length,
+        files: results,
+      });
+    } catch (e) {
+      console.error("❌ Multiple upload failed:", e.message);
+      next(e);
+    }
+  },
+);
+
+// GET stream audio file from MongoDB
+app.get("/api/audio/stream/:id", async (req, res, next) => {
+  try {
+    const audioData = await audioStorageService.getAudioData(req.params.id);
+
+    if (!audioData) {
+      return res.status(404).json({ error: "Audio file not found" });
+    }
+
+    // Set headers for audio streaming
+    res.set({
+      "Content-Type": audioData.mimeType,
+      "Content-Length": audioData.size,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "public, max-age=31536000", // Cache for 1 year
+    });
+
+    res.send(audioData.buffer);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// GET list audio files from MongoDB
+app.get("/api/audio/files", async (req, res, next) => {
+  try {
+    if (!audioStorageService.isStorageAvailable()) {
+      return res.status(503).json({
+        error: "Audio storage not available",
+      });
+    }
+
+    const { q } = req.query;
+    const files = await audioStorageService.listAudioFiles({ q });
+    res.json({ files });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// GET audio file info
+app.get("/api/audio/info/:id", async (req, res, next) => {
+  try {
+    const info = await audioStorageService.getAudioInfo(req.params.id);
+
+    if (!info) {
+      return res.status(404).json({ error: "Audio file not found" });
+    }
+
+    res.json(info);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// DELETE an audio file from MongoDB
+app.delete("/api/audio/:fileId", async (req, res, next) => {
+  try {
+    if (!audioStorageService.isStorageAvailable()) {
+      return res.status(503).json({
+        error: "Audio storage not available",
+      });
+    }
+
+    const deleted = await audioStorageService.deleteAudio(req.params.fileId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Audio file not found" });
+    }
+
+    res.status(204).send();
+  } catch (e) {
+    next(e);
+  }
 });
 
 // Error handler
