@@ -18,10 +18,6 @@ Web-Audio-Sampler/
 │   ├── src/
 │   ├── package.json
 │   └── README.md
-├── frontend/              # Next.js React application (alternative)
-│   ├── src/
-│   ├── package.json
-│   └── README.md
 └── AI-DOCUMENTATION.md    # Documentation IA
 ```
 
