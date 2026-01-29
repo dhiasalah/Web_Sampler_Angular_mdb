@@ -33,11 +33,12 @@ Créer un système d'enregistrement audio dans Angular avec les fonctionnalités
 
 ```
 Implémenter une fonction de détection de silences dans un AudioBuffer :
-- Analyser l'amplitude du signal audio
+- Analyser l'amplitude du signal audio après l'enregistrement
 - Détecter les segments où le volume est en dessous d'un seuil configurable
-- Retourner un tableau de segments {start, end} en secondes
+- Retourner un tableau de segments {start, end} en secondes représentant les parties sonores
 - Permettre de découper automatiquement un enregistrement en plusieurs parties
 - Affecter chaque segment à un pad différent, en commençant par le pad 0
+- Note: L'analyse se fait après l'arrêt manuel de l'enregistrement, pas en temps réel
 ```
 
 ---
@@ -86,7 +87,7 @@ Voici les fonctionnalités optionnelles développées dans ce projet :
 | Feature               | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | Enregistrement micro  | Capture audio via MediaRecorder API                              |
-| Détection de silences | Analyse et découpage automatique des sons                        |
+| Détection de silences | Analyse post-enregistrement et découpage automatique des sons    |
 | Sauvegarde presets    | Upload de fichiers audio et création JSON                        |
 | MongoDB Cloud         | Stockage des presets dans MongoDB Atlas                          |
 | Hébergement Render    | Backend déployé sur https://web-sampler-angular-mdb.onrender.com |

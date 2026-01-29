@@ -23,14 +23,27 @@ Backend REST API for the Web Audio Sampler project.
 
 ## Setup & Running
 
-### Installation
+### For Production
+
+The backend is already deployed at: **https://web-sampler-angular-mdb.onrender.com**
+
+To use the production backend:
+
+- Edit `angular-app/src/app/config/environment.ts`
+- Set `BACKEND_URL: 'https://web-sampler-angular-mdb.onrender.com'`
+
+No additional deployment needed - the production backend is live and ready to use.
+
+### For Local Development
+
+#### Installation
 
 ```bash
 cd backend
 npm install
 ```
 
-### Environment Configuration
+#### Environment Configuration
 
 Create a `.env` file in the `backend` folder with the following variables:
 
@@ -44,9 +57,7 @@ PORT=5000
 
 **Note:** The `.env` file is not tracked by git for security reasons.
 
-### Running the Backend
-
-#### For Local Development
+#### Running the Backend
 
 1. Start the backend server:
 
@@ -59,24 +70,6 @@ The server will run on `http://localhost:5000`
 2. Update the Angular frontend to use localhost:
    - Edit `angular-app/src/app/config/environment.ts`
    - Set `BACKEND_URL: 'http://localhost:5000'`
-
-#### For Production
-
-The backend is already deployed at: **https://web-sampler-angular-mdb.onrender.com**
-
-To use the production backend:
-
-- Edit `angular-app/src/app/config/environment.ts`
-- Set `BACKEND_URL: 'https://web-sampler-angular-mdb.onrender.com'`
-
-No additional deployment needed - the production backend is live and ready to use.
-
-### Environment Variables
-
-The backend may require the following environment variables:
-
-- `MONGODB_URI` - MongoDB connection string
-- `PORT` - Port number (default: 5000)
 
 ### Testing
 
