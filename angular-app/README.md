@@ -2,6 +2,8 @@
 
 This Angular application is the frontend for the Web Audio Sampler project.
 
+🚀 **Live Demo:** [https://dhiasalah.github.io/Web_Sampler_Angular_mdb/](https://dhiasalah.github.io/Web_Sampler_Angular_mdb/)
+
 ## Features
 
 - Dynamic preset menu with categories (drumkit, piano, etc.)
