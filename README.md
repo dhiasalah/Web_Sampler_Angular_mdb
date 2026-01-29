@@ -78,6 +78,7 @@ Application runs at: `http://localhost:4200`
 
 ## Documentation
 
+- [Features Implemented](./FEATURES.md) - Complete list of required and optional features
 - [Frontend README (Angular)](./angular-app/README.md) - Setup, features, and development guide
 - [Backend README](./backend/README.md) - API endpoints and server setup
 - [AI Documentation](./AI-DOCUMENTATION.md) - Utilisation de l'IA dans le projet

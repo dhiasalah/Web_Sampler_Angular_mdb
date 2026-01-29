@@ -80,6 +80,20 @@ Créer un fichier de configuration centralisé pour l'application Angular :
 
 ---
 
+### Prompt 6 : Conversion en Web Component
+
+```
+Transformer l'application Angular en Web Component réutilisable :
+- Utiliser @angular/elements pour convertir le composant principal
+- Utiliser createCustomElement() pour créer un custom element
+- Enregistrer avec customElements.define() sous le nom 'web-audio-sampler'
+- Installer zone.js comme dépendance
+- Modifier index.html pour utiliser le custom element
+```
+
+---
+
+
 ## Features Optionnelles Implémentées
 
 Voici les fonctionnalités optionnelles développées dans ce projet :
@@ -92,6 +106,8 @@ Voici les fonctionnalités optionnelles développées dans ce projet :
 | MongoDB Cloud         | Stockage des presets dans MongoDB Atlas                          |
 | Hébergement Render    | Backend déployé sur https://web-sampler-angular-mdb.onrender.com |
 | Gestion presets       | CRUD complet (création, suppression, modification)               |
+| Web Component         | Application convertie en custom element réutilisable             |
+| CI/CD GitHub Pages    | Déploiement automatique via GitHub Actions                       |
 
 ---
 
