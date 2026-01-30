@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:gh-pages": "ng build --configuration production --base-href /Web_Sampler_Angular_mdb/",
+    "build:gh-pages": "ng build --configuration production --base-href /BenSalah_Khalia_Web_Sampler_Angular/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
