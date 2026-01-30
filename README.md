@@ -63,6 +63,23 @@ Application runs at: `http://localhost:4200`
 - ☁️ MongoDB Cloud storage
 - 🚀 Backend deployed on Render.com
 
+## CI/CD Pipeline
+
+The project uses continuous integration and deployment pipelines:
+
+### Frontend (GitHub Actions)
+
+- Automated workflow defined in `.github/workflows/deploy-angular.yml`
+- Triggers on push to `main` branch
+- Builds the Angular application (`npm run build:gh-pages`)
+- Deploys artifacts to **GitHub Pages**
+
+### Backend (Render)
+
+- Continuous deployment integration with Render.com
+- Triggers automatically on git push
+- Installs dependencies and starts the Express server
+
 ## Technologies
 
 ### Frontend (Angular)
