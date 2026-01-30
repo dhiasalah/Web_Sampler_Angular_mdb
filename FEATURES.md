@@ -55,5 +55,5 @@
 
 ## Déploiement
 
-- Frontend: https://dhiasalah.github.io/Web_Sampler_Angular_mdb/
+- Frontend: https://dhiasalah.github.io/BenSalah_Khalia_Web_Sampler_Angular/
 - Backend: https://web-sampler-angular-mdb.onrender.com

@@ -7,7 +7,7 @@ A professional web-based audio sampler and beat maker application built with mod
 - **BEN SALAH Mohamed Dhia**
 - **KHALIA Mohamed Mehdi**
 
-**Live Demo**: https://dhiasalah.github.io/Web_Sampler_Angular_mdb/
+**Live Demo**: https://dhiasalah.github.io/BenSalah_Khalia_Web_Sampler_Angular/
 
 Select presets, load audio samples, trim them with interactive waveform editor, and trigger playback using 16 pads or keyboard shortcuts.
 

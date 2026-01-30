@@ -2,7 +2,7 @@
 
 This Angular application is the frontend for the Web Audio Sampler project.
 
-**Live Demo:** [https://dhiasalah.github.io/Web_Sampler_Angular_mdb/](https://dhiasalah.github.io/Web_Sampler_Angular_mdb/)
+**Live Demo:** [https://dhiasalah.github.io/BenSalah_Khalia_Web_Sampler_Angular/](https://dhiasalah.github.io/BenSalah_Khalia_Web_Sampler_Angular/)
 
 ## Features
 
